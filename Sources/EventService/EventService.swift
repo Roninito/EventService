@@ -13,7 +13,7 @@ public class Events: ObservableObject, Serviceable {
     public typealias ServiceProvider = Events
     public var provider: Events { self }
     private var manifest: [String: Event] = [:]
-    @Published var announcement: String = "Event Service Ready"
+    @Published public var announcement: String = "Event Service Ready"
     
     
     public init() { registerAsServiceable() }
