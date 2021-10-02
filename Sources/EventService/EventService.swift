@@ -14,6 +14,10 @@ public class Events: ObservableObject, Serviceable {
     public var provider: Events { self }
     private var manifest: [String: Event] = [:]
     @Published public var announcement: String = "Event Service Ready"
+	
+	
+	public var numberOfRegisteredEvents: Int { manifest.count }
+	public var registeredEvents: [String] { manifest.keys.sorted() }
     
     
 	public init(isService: Bool = true) {
