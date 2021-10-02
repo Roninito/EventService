@@ -16,7 +16,9 @@ public class Events: ObservableObject, Serviceable {
     @Published public var announcement: String = "Event Service Ready"
     
     
-    public init() { registerAsServiceable() }
+	public init(isService: Bool = true) {
+		if isService == true { registerAsServiceable() }
+	}
     
     
     private func register(event: Event) {
