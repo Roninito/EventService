@@ -8,7 +8,17 @@ struct EventService {
 }
 
 
-public class Events: ObservableObject, Serviceable {
+public class Events: ObservableObject, Serviceable, NSSecureCoding {
+	public static var supportsSecureCoding: Bool = true
+	
+	public func encode(with coder: NSCoder) {
+		coder.encode(NSDictionary(dictionary: manifest), forKey: "manifest")
+	}
+	
+	public required init?(coder: NSCoder) {
+		manifest = coder.decodeObject(of: NSDictionary.self, forKey: "manifest") as! [String: Event]
+	}
+	
     
     public typealias ServiceProvider = Events
     public var provider: Events { self }
