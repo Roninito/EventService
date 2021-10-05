@@ -4,20 +4,12 @@ import ServiceKit
 
 
 struct EventService {
-    var text = "Hello, World!"
+    var text = "!"
 }
 
 
-public class Events: ObservableObject, Serviceable, NSSecureCoding {
+public class Events: NSObject, ObservableObject, Serviceable, NSSecureCoding {
 	public static var supportsSecureCoding: Bool = true
-	
-	public func encode(with coder: NSCoder) {
-		coder.encode(NSDictionary(dictionary: manifest), forKey: "manifest")
-	}
-	
-	public required init?(coder: NSCoder) {
-		manifest = coder.decodeObject(of: NSDictionary.self, forKey: "manifest") as! [String: Event]
-	}
 	
     
     public typealias ServiceProvider = Events
@@ -31,9 +23,20 @@ public class Events: ObservableObject, Serviceable, NSSecureCoding {
     
     
 	public init(isService: Bool = true) {
+		super.init()
 		if isService == true { registerAsServiceable() }
 	}
     
+	
+	public func encode(with coder: NSCoder) {
+		coder.encode(NSDictionary(dictionary: manifest), forKey: "manifest")
+	}
+	
+	
+	public required init?(coder: NSCoder) {
+		manifest = coder.decodeObject(of: NSDictionary.self, forKey: "manifest") as! [String: Event]
+	}
+	
     
     private func register(event: Event) {
         manifest[event.id] = event
