@@ -24,26 +24,28 @@ public class Events: NSObject, ObservableObject, Serviceable, NSSecureCoding {
 	}()
 	
     @Published public var announcement: String = "Event Service Ready"
-	private var identifier: String = "Generic Event Service"
+	private var identifier: String = "Unidentified Events Manager"
 	
 	public var numberOfRegisteredEvents: Int { manifest.count }
 	public var registeredEvents: [String] { manifest.keys.sorted() }
     
     
-	public init(identifier: String?, isService: Bool = true) {
+	public init(identifier: String = "com.astra.genericEventService", isService: Bool = true) {
 		super.init()
-		self.identifier = identifier ?? self.identifier
+		self.identifier = identifier
 		if isService == true { registerAsServiceable() }
 	}
     
 	
 	public func encode(with coder: NSCoder) {
 		coder.encode(NSDictionary(dictionary: manifest), forKey: "manifest")
+		coder.encode((identifier as NSString), forKey: "identifier")
 	}
 	
 	
 	public required init?(coder: NSCoder) {
 		manifest = coder.decodeObject(of: NSDictionary.self, forKey: "manifest") as! [String: Event]
+		identifier = coder.decodeObject(of: NSString.self, forKey: "identifier")! as String
 	}
 	
     
