@@ -1,39 +1,47 @@
 import Foundation
 import Combine
 import ServiceKit
+import JavaScriptCore
 
 
 struct EventService {
     var text = "!"
 }
 
+@objc public protocol EventsJSExports: JSExport {
+	var identifier: String { get }
+	var registeredEvents: [String] { get }
+	var numberOfRegisteredEvents: Int { get }
+}
 
-public class Events: NSObject, ObservableObject, Serviceable, NSSecureCoding {
+@objc public class Events: NSObject, ObservableObject, Serviceable, NSSecureCoding, EventsJSExports {
 	public static var supportsSecureCoding: Bool = true
-	
-    
     public typealias ServiceProvider = Events
     public var provider: Events { self }
-    private var manifest: [String: Event] = [:]
-	
-	private lazy var queue: OperationQueue = {
+	private var manifest: [String: Event] = [:]
+
+	public lazy var queue: OperationQueue = {
 		let q = OperationQueue()
 		q.name = identifier
-		q.qualityOfService = .default
+		q.qualityOfService = .userInitiated
 		return q
 	}()
 	
     @Published public var announcement: String = "Event Service Ready"
-	private var identifier: String = "Unidentified Events Manager"
+	@objc public dynamic var identifier: String = ""
 	
-	public var numberOfRegisteredEvents: Int { manifest.count }
-	public var registeredEvents: [String] { manifest.keys.sorted() }
-    
+	@objc public dynamic var numberOfRegisteredEvents: Int { manifest.count }
+	@objc public dynamic var registeredEvents: [String] { manifest.keys.sorted() }
+	public var didRegisterEvent = PassthroughSubject<Event, Never>()
+	public var eventRaised = PassthroughSubject<Event, Never>()
+
     
 	public init(identifier: String = "com.astra.genericEventService", isService: Bool = true) {
 		super.init()
 		self.identifier = identifier
-		if isService == true { registerAsServiceable() }
+		if isService == true {
+			registerAsServiceable()			
+		}
 	}
     
 	
@@ -51,31 +59,41 @@ public class Events: NSObject, ObservableObject, Serviceable, NSSecureCoding {
     
     private func register(event: Event) {
 		queue.addOperation { [unowned self] in
-			manifest[event.id] = event
+			queue.addBarrierBlock {
+				manifest[event.id] = event
+				DispatchQueue.main.async {
+					didRegisterEvent.send(event)
+				}
+			}
 		}
-        
     }
     
     
     private func event(_ eventID: String) -> Event? {
-        manifest[eventID]
+		return manifest[eventID]
     }
     
     
     public subscript(_ key: String = "") -> Event? {
         get { event(key) }
         set {
-			queue.addOperation { [unowned self] in
-				register(event: newValue!)
-			}
+			register(event: newValue!)
 		}
     }
     
     
     public func raise(by: Any, _ eventID: String, info: [String: Any]) {
 		queue.addOperation { [unowned self] in
-			announcement = "Event: \(eventID) raised by: \(String(describing: by)) with info: \(info)"
-			event(eventID)?.raised = info
+			if let theEvent = event(eventID) {
+				DispatchQueue.main.async {
+					announcement = "Event: \(eventID) raised by: \(String(describing: by)) with info: \(info)"
+					theEvent.raised = info
+					eventRaised.send(theEvent)
+				}
+			}
+			else {
+				print("Unable to raise the Event with ID: \(eventID)")
+			}
 		}
     }
 }

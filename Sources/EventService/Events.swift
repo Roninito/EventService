@@ -8,16 +8,18 @@
 import Foundation
 import Combine
 import ServiceKit
+import JavaScriptCore
 
 
-public class Event: NSObject, Identifiable, NSSecureCoding {
-	
+@objc public protocol EventJSExports: JSExport {
+	var id: String { get }
+	func raiseWith(_ value: JSValue)
+}
+
+@objc public class Event: NSObject, ObservableObject, Identifiable, NSSecureCoding, EventJSExports {
 	public static var supportsSecureCoding: Bool = true
-	
-    public var id: String
-	
+	@objc public dynamic var id: String
     @Published public var raised: [String: Any]
-    
 	
     public init(_ eventID: String) {
         self.id = eventID
@@ -25,8 +27,8 @@ public class Event: NSObject, Identifiable, NSSecureCoding {
     }
 	
 	public required init?(coder: NSCoder) {
-			id = coder.decodeObject(of: NSString.self, forKey: "id")! as String
-			raised = coder.decodeObject(of: NSDictionary.self, forKey: "raised") as! [String: Any]
+		id = coder.decodeObject(of: NSString.self, forKey: "id")! as String
+		raised = coder.decodeObject(of: NSDictionary.self, forKey: "raised") as! [String: Any]
 	}
 
 	public func encode(with coder: NSCoder) {
@@ -34,7 +36,13 @@ public class Event: NSObject, Identifiable, NSSecureCoding {
 		coder.encode(NSDictionary(dictionary: raised), forKey: "raised")
 	}
 	
-	
-	
+	@objc public func raiseWith(_ value: JSValue ) {
+		if let dic = value.toObject() as? [String: Any] {
+			raised = dic
+		}
+		else {
+			print("Unable to raise value passed through script because it was not convertible to value.toObject() as! [String: Any]")
+		}
+	}
 }
 
