@@ -19,7 +19,9 @@ struct EventService {
     public typealias ServiceProvider = Events
     public var provider: Events { self }
 	private var manifest: [String: Event] = [:]
-
+    public var subscriptions =  [AnyCancellable]()
+    
+    
 	public lazy var queue: OperationQueue = {
 		let q = OperationQueue()
 		q.name = identifier

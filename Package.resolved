@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "ServiceKit",
+        "repositoryURL": "https://github.com/Roninito/ServiceKit.git",
+        "state": {
+          "branch": null,
+          "revision": "56df8b0d80311c80fdc7b1c57024a9248f594efb",
+          "version": "1.0.3"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
