@@ -14,6 +14,7 @@ struct EventService {
 	var numberOfRegisteredEvents: Int { get }
 }
 
+
 @objc public class Events: NSObject, ObservableObject, Serviceable, NSSecureCoding, EventsJSExports {
 	public static var supportsSecureCoding: Bool = true
     public typealias ServiceProvider = Events
@@ -61,9 +62,9 @@ struct EventService {
     
     private func register(event: Event) {
 		queue.addOperation { [unowned self] in
-			queue.addBarrierBlock {
+            queue.addBarrierBlock { [self] in
 				manifest[event.id] = event
-				DispatchQueue.main.async {
+                DispatchQueue.main.async { [self] in
 					didRegisterEvent.send(event)
 				}
 			}
@@ -78,16 +79,14 @@ struct EventService {
     
     public subscript(_ key: String = "") -> Event? {
         get { event(key) }
-        set {
-			register(event: newValue!)
-		}
+        set { register(event: newValue!) }
     }
     
     
     public func raise(by: Any, _ eventID: String, info: [String: Any]) {
 		queue.addOperation { [unowned self] in
 			if let theEvent = event(eventID) {
-				DispatchQueue.main.async {
+                DispatchQueue.main.async { [unowned self] in
 					announcement = "Event: \(eventID) raised by: \(String(describing: by)) with info: \(info)"
 					theEvent.raised = info
 					eventRaised.send(theEvent)
